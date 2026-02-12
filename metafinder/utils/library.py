@@ -4,6 +4,7 @@ from os.path import isfile
 from metafinder.utils.finder import google
 from metafinder.utils.finder import bing
 from metafinder.utils.finder import baidu
+from metafinder.utils.finder import kagi
 from metafinder.utils.file.download import download_file
 from metafinder.utils.file.metadata import extract_metadata
 from metafinder.utils.result import Result
@@ -39,6 +40,28 @@ def extract_metadata_from_google_search(domain, limit=50, threads=4):
     metadata_files = None
     if links and len(links) > 0:
         metadata_files = download_file(_generate_list(links, "Google"), directory.name, threads, False)
+    directory.cleanup()
+    return Result(metadata_files) if metadata_files else None
+
+def extract_metadata_from_kagi_search(domain, limit=50, threads=4, kagi_token=None):
+    """Search metadata in files through Kagi
+
+    Args:
+       domain: Target domain.
+       limit: Maximum number of files to search.
+       threads: Threads for downloading documents.
+    
+    Raises:
+        Exception: If there is an error
+
+    Returns:
+        dict: Result object
+    """
+    links = kagi.search(domain, limit, kagi_token)
+    directory = tempfile.TemporaryDirectory()
+    metadata_files = None
+    if links and len(links) > 0:
+        metadata_files = download_file(_generate_list(links, "Kagi"), directory.name, threads, False)
     directory.cleanup()
     return Result(metadata_files) if metadata_files else None
 

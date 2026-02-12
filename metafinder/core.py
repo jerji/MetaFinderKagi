@@ -1,6 +1,7 @@
 from metafinder.utils.finder import google
 from metafinder.utils.finder import bing
 from metafinder.utils.finder import baidu
+from metafinder.utils.finder import kagi
 from metafinder.utils.file.download import download_file
 from metafinder.utils.file.parser import file_parser_list, file_parser
 from metafinder.utils.color_print import print_error, print_ok
@@ -8,19 +9,23 @@ from metafinder.utils.result import Result
 from metafinder.utils.var_data import * 
 
 
-def _get_links(target, limit, directory, threads, search_engines):
+def _get_links(target, limit, directory, threads, search_engines, kagi_token=None):
     links = []
     search_engines_methods = {
         "google": google.search,
         "bing": bing.search,
-        "baidu": baidu.search
+        "baidu": baidu.search,
+        "kagi": kagi.search
      }
     for engine in search_engines_methods.keys():
         aux_links = []
         if search_engines.get(engine, False):
             print(f"Searching in {engine}")
             try:
-                aux_links = search_engines_methods[engine](target, limit)
+                if engine == "kagi":
+                    aux_links = search_engines_methods[engine](target, limit, kagi_token)
+                else:
+                    aux_links = search_engines_methods[engine](target, limit)
                 for link_to_check in aux_links:
                     exist = False
                     i = 0
@@ -43,8 +48,8 @@ def _get_links(target, limit, directory, threads, search_engines):
     return links
 
 
-def processing(target, limit, directory, threads, search_engines):
-    links = _get_links(target, limit, directory, threads, search_engines)
+def processing(target, limit, directory, threads, search_engines, kagi_token=None):
+    links = _get_links(target, limit, directory, threads, search_engines, kagi_token)
     total_links = len(links)
     links_msg = f"Total files to be analyzed: {total_links}"
     print(links_msg)

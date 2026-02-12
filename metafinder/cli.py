@@ -1,5 +1,6 @@
 import argparse
 from os import sep, listdir, remove
+import os
 import os.path
 import sys
 from pathlib import Path
@@ -22,6 +23,8 @@ def main(argv=None):
     parser.add_argument('-go','--google', help="Search in Google", action='store_true', default=False)
     parser.add_argument('-bi','--bing', help="Search in Bing", action='store_true', default=False)
     parser.add_argument('-ba','--baidu', help="Search in Baidu", action='store_true', default=False)
+    parser.add_argument('-ka','--kagi', help="Search in Kagi", action='store_true', default=False)
+    parser.add_argument('-kt','--kagi-token', help="Kagi API token (or set KAGI_TOKEN env)", required=False)
     parser.add_argument('-v','--version', help="Show Metafinder version", action='version', version=__version__)
 
     args = parser.parse_args()
@@ -31,7 +34,8 @@ def main(argv=None):
     search_engines = {
         "google": args.google,
         "bing": args.bing,
-        "baidu": args.baidu
+        "baidu": args.baidu,
+        "kagi": args.kagi
     }
     some_election = False
     for k,v in search_engines.items():
@@ -40,12 +44,18 @@ def main(argv=None):
             break
     
     if not some_election:
-        search_engines["google"] = True
+        search_engines["kagi"] = True
+
+    # determine kagi token if Kagi will be used
+    kagi_token = args.kagi_token or os.environ.get('KAGI_TOKEN')
+    if search_engines.get("kagi") and not kagi_token:
+        print("[-] Kagi selected but no token provided. Provide via --kagi-token or KAGI_TOKEN env.")
+        sys.exit(1)
 
     limit = 250 if args.limit > 250 else args.limit # max 250
 
     try:
-        processing(args.domain, limit, str(directory), args.threads, search_engines)
+        processing(args.domain, limit, str(directory), args.threads, search_engines, kagi_token)
     except KeyboardInterrupt:
         print("[-] MetaFinder has been interrupted. Deleting files.")
         try:
