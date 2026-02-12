@@ -49,6 +49,7 @@ Parameters:
   * go: Optional. Search in Google.
   * bi: Optional. Search in Bing.
   * ba: Optional. Search in Baidu. (Experimental)
+  * ka: Optional. Search in Kagi
 
 ### In Code
 ```
@@ -59,6 +60,7 @@ domain = "target_domain"
 result = metadata_extractor.extract_metadata_from_google_search(domain, documents_limit)
 # result = metadata_extractor.extract_metadata_from_bing_search(domain, documents_limit)
 # result = metadata_extractor.extract_metadata_from_baidu_search(domain, documents_limit)
+# result = metadata_extractor.extract_metadata_from_kagi_search(domain, documents_limit)
 authors = result.get_authors()
 software = result.get_software()
 for k,v in result.get_metadata().items():
