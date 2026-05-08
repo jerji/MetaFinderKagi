@@ -8,51 +8,45 @@ from metafinder.utils.exception import KagiTokenInvalid
 import urllib3
 urllib3.disable_warnings()
 
+def find_by_tag(event_list, tag):
+    if not isinstance(event_list, list):
+        return None
+    for item in event_list:
+        if isinstance(item, dict) and item.get('tag') == tag:
+            return item.get('payload')
+    return None
 
 def parse_kagi_sse(text):
     events = {}
     current_event = {}
-
     lines = text.split('\n')
     i = 0
-
     while i < len(lines):
         line = lines[i]
-
         if line.startswith('id:'):
             # Save previous event if complete
             if current_event and 'id' in current_event:
                 events[current_event['id']] = current_event.get('data')
-
             # Start new event
             current_event = {'id': line[3:].strip()}
-
         elif line.startswith('data:'):
             data_content = line[5:].strip()
-
             # Accumulate multi-line data until next field
             i += 1
             while i < len(lines) and not lines[i].startswith(('id:', 'event:', 'data:')):
-                if lines[i].strip():  # Preserve non-empty continuation lines
                     data_content += lines[i]
                 i += 1
-            i -= 1  # Back up since outer loop increments
-
             # Parse JSON content
             if data_content:
                 try:
                     current_event['data'] = json.loads(data_content)
                 except json.JSONDecodeError:
                     current_event['data'] = data_content
-
         i += 1
-
     # Don't forget the last event
     if current_event and 'id' in current_event:
         events[current_event['id']] = current_event.get('data')
-
     return events
-
 
 def search(target, total, token=None):
     documents = []
@@ -82,13 +76,19 @@ def search(target, total, token=None):
             text = response.text
             events = parse_kagi_sse(text)
 
-            if events['0'][0]['payload'] == '/signin':
+            if find_by_tag(events.get('0'), 'bang') == '/signin':
                 raise KagiTokenInvalid()
-            
-            if 'type' in events['1'][0]['payload'] and events['1'][0]['payload']['type'] == 'no_results':
-                return ""
 
-            search_results = events['1'][2]['payload']['content']
+            error_payload = find_by_tag(events.get('1'), 'error')
+            if isinstance(error_payload, dict) and error_payload.get('type') == 'no_results':
+                return documents
+
+            search_payload = find_by_tag(events.get('1'), 'search')
+            if not isinstance(search_payload, dict):
+                iterations += 1
+                continue
+
+            search_results = search_payload.get('content', '')
             soup = BeautifulSoup(search_results, "html.parser")
             all_links = soup.find_all("a")
             for link in all_links:
