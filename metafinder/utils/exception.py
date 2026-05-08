@@ -21,3 +21,11 @@ class BaiduDetection(Exception):
             self.data = args[0]
     def  __str__(self):
         return "BaiduDetection, {0}".format(self.data)
+
+class KagiTokenInvalid(Exception):
+    def __init__(self, *args):
+        self.data = "Kagi Token Invalid"
+        if args:
+            self.data = args[0]
+    def  __str__(self):
+        return "Kagi Token Invalid, {0}".format(self.data)

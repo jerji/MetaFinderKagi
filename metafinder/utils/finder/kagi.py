@@ -3,8 +3,8 @@ from bs4 import BeautifulSoup
 from random import randint
 import json
 import os
-from metafinder.utils.exception import GoogleCaptcha, GoogleCookiePolicies
 from metafinder.utils.agent import user_agent
+from metafinder.utils.exception import KagiTokenInvalid
 import urllib3
 urllib3.disable_warnings()
 
@@ -81,6 +81,13 @@ def search(target, total, token=None):
             allow_redirects=True)
             text = response.text
             events = parse_kagi_sse(text)
+
+            if events['0'][0]['payload'] == '/signin':
+                raise KagiTokenInvalid()
+            
+            if 'type' in events['1'][0]['payload'] and events['1'][0]['payload']['type'] == 'no_results':
+                return ""
+
             search_results = events['1'][2]['payload']['content']
             soup = BeautifulSoup(search_results, "html.parser")
             all_links = soup.find_all("a")
