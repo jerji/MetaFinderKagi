@@ -4,7 +4,7 @@ build-backend = "setuptools.build_meta"
 
 [project]
 name = "metafinder"
-version = "1.2"
+version = "1.2.2"
 description = "MetaFinder - Metadata search through Search Engines"
 readme = {file = "README.md", content-type = "text/markdown"}
 authors = [ {name = "Josue Encinar (@JosueEncinar)"} ]
